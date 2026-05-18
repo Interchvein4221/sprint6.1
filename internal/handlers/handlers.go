@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"time"
-
 	"github.com/Yandex-Practicum/go1fl-sprint6-final/internal/service"
 )
 
@@ -27,6 +26,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
 	file, header, err := r.FormFile("file")
 	if err != nil {
 		http.Error(w, "no file", http.StatusBadRequest)
