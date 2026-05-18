@@ -11,11 +11,10 @@ import (
 	"github.com/Yandex-Practicum/go1fl-sprint6-final/internal/service"
 )
 
-func IndexHandler(w http.ResponseWriter, r *http.Request) {
-
+func RootHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	http.ServeFile(w, r, "index.html")
-
+	w.WriteHeader(http.StatusOK)
+	http.ServeFile(w, r, "../index.html")
 }
 
 func UploadHandler(w http.ResponseWriter, r *http.Request) {
