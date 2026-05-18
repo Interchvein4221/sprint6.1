@@ -5,15 +5,15 @@ import (
 	"github.com/Yandex-Practicum/go1fl-sprint6-final/pkg/morse"
 )
 
-func Convert(data string) string {
+func Convert(data string) (string, error) {
 
 	data = strings.TrimSpace(data)
 	if data == "" {
-		return ""
+		return "", nil
 	}
 	if strings.Contains(data, ".") || strings.Contains(data, "-") {
-		return morse.ToText(data)
+		return morse.ToText(data), nil
 	}
-	return morse.ToMorse(data)
+	return morse.ToMorse(data), nil
 
 }
