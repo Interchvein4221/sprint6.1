@@ -1,6 +1,5 @@
 package server
-<<<<<<< HEAD
-=======
+
 import (
 
 	"log"
@@ -25,4 +24,4 @@ func NewServer(logger *log.Logger) *http.Server {
 	}
 
 }
->>>>>>> bb32e31 (one18.05.2026)
+

@@ -1,6 +1,4 @@
 package handlers
-<<<<<<< HEAD
-=======
 
 import (
 	"io"
@@ -57,4 +55,3 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(result))
 
 }
->>>>>>> bb32e31 (one18.05.2026)
