@@ -12,20 +12,23 @@ import (
 )
 
 func RootHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	http.ServeFile(w, r, "../index.html")
-}
 
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	http.ServeFile(w, r, "index.html")
+
+}
 func UploadHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	err := r.ParseMultipartForm(10 << 20)
-	if err != nil {
-		http.Error(w, "bad form", http.StatusBadRequest)
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
 	file, header, err := r.FormFile("file")
@@ -36,23 +39,26 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 	data, err := io.ReadAll(file)
 	if err != nil {
-		http.Error(w, "read error", http.StatusInternalServerError)
+		http.Error(w, "read error", http.StatusBadRequest)
 		return
 	}
-	result := service.Convert(string(data))
-	rawTime := time.Now().UTC().String()
-	rawTime = strings.ReplaceAll(rawTime, " ", "_")
-	rawTime = strings.ReplaceAll(rawTime, ":", "-")
+	input := strings.TrimSpace(string(data))
+	if input == "" {
+		http.Error(w, "empty file", http.StatusBadRequest)
+		return
+	}
+	result := service.Convert(input)
 	ext := filepath.Ext(header.Filename)
-	filename := rawTime + ext
-	outFile, err := os.Create(filename)
-	if err != nil {
-		http.Error(w, "file error", http.StatusInternalServerError)
+	if ext == "" {
+		ext = ".txt"
+	}
+	filename := time.Now().UTC().Format("20060102150405") + ext
+	if err := os.WriteFile(filename, []byte(result), 0644); err != nil {
+		http.Error(w, "write error", http.StatusInternalServerError)
 		return
 	}
-	defer outFile.Close()
-	_, _ = outFile.WriteString(result)
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(result))
+	_, _ = w.Write([]byte(result))
 
 }
