@@ -7,20 +7,19 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-
 	"github.com/Yandex-Practicum/go1fl-sprint6-final/internal/service"
 )
-
 func RootHandler(w http.ResponseWriter, r *http.Request) {
 
-	if r.Method != http.MethodGet {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
 		return
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	http.ServeFile(w, r, "index.html")
 
 }
+
 func UploadHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodPost {
@@ -39,7 +38,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 	data, err := io.ReadAll(file)
 	if err != nil {
-		http.Error(w, "read error", http.StatusBadRequest)
+		http.Error(w, "read error", http.StatusInternalServerError)
 		return
 	}
 	input := strings.TrimSpace(string(data))
@@ -47,7 +46,11 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "empty file", http.StatusBadRequest)
 		return
 	}
-	result := service.Convert(input)
+	result, err := service.Convert(input)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	ext := filepath.Ext(header.Filename)
 	if ext == "" {
 		ext = ".txt"
