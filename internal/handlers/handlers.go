@@ -3,8 +3,10 @@ package handlers
 import (
 	"io"
 	"net/http"
-
+     "time"
 	"github.com/Yandex-Practicum/go1fl-sprint6-final/internal/service"
+	"strings"
+	"os"
 )
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
@@ -26,27 +28,26 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "bad form", http.StatusBadRequest)
 		return
 	}
 	file, _, err := r.FormFile("file")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "no file", http.StatusBadRequest)
 		return
 	}
 	defer file.Close()
 	data, err := io.ReadAll(file)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "read error", http.StatusInternalServerError)
 		return
 	}
-	result, err := service.Convert(string(data))
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	result := service.Convert(string(data))
+	name := strings.ReplaceAll(time.Now().UTC().Format(time.RFC3339Nano), ":", "-")
+	filename := name + ".txt"
+	_ = os.WriteFile(filename, []byte(result), 0644)
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(result))
+	_, _ = w.Write([]byte(result))
 
 }

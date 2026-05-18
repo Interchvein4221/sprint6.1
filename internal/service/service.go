@@ -2,18 +2,19 @@ package service
 
 import (
 	"strings"
+
 	"github.com/Yandex-Practicum/go1fl-sprint6-final/pkg/morse"
 )
 
-func Convert(data string) (string, error) {
+func Convert(data string) string {
 
 	data = strings.TrimSpace(data)
 	if data == "" {
-		return "", nil
+		return ""
 	}
 	if strings.Contains(data, ".") || strings.Contains(data, "-") {
-		return morse.ToText(data), nil
+		return morse.ToText(data)
 	}
-	return morse.ToMorse(data), nil
+	return morse.ToMorse(data)
 
 }
