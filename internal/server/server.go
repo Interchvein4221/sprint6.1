@@ -1,23 +1,22 @@
 package server
 
 import (
-	"net/http"
 	"log"
-	"github.com/Yandex-Practicum/go1fl-sprint6-final/internal/handlers"
+	"net/http"
 	"time"
+
+	"github.com/Yandex-Practicum/go1fl-sprint6-final/internal/handlers"
 )
 
 type Server struct {
-
 	Logger *log.Logger
 	HTTP   *http.Server
-
 }
 
 func NewServer(logger *log.Logger) *Server {
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", handlers.RootHandler)
+	mux.HandleFunc("/", handlers.UploadHandler)
 	mux.HandleFunc("/upload", handlers.UploadHandler)
 	srv := &http.Server{
 		Addr:         ":8080",
