@@ -5,7 +5,9 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
+
 	"github.com/Yandex-Practicum/go1fl-sprint6-final/internal/service"
 )
 
@@ -17,41 +19,43 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 
 func UploadHandler(w http.ResponseWriter, r *http.Request) {
 
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 	file, header, err := r.FormFile("file")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer file.Close()
-
 	data, err := io.ReadAll(file)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	result, err := service.Convert(string(data))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	ext := filepath.Ext(header.Filename)
-	filename := time.Now().UTC().String() + ext
-
+	rawTime := time.Now().UTC().String()
+	rawTime = strings.ReplaceAll(rawTime, " ", "_")
+	rawTime = strings.ReplaceAll(rawTime, ":", "-")
+	filename := rawTime + ext
 	outFile, err := os.Create(filename)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer outFile.Close()
-
 	_, err = outFile.WriteString(result)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
+	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(result))
 
 }
