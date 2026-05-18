@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 	"time"
-
+     "path/filepath"
 	"github.com/Yandex-Practicum/go1fl-sprint6-final/internal/service"
 )
 
@@ -28,7 +28,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	file, _, err := r.FormFile("file")
+	file, header, err := r.FormFile("file")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -39,22 +39,21 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	result, err := service.Convert(string(data))
+	result := service.Convert(string(data))
+	ext := filepath.Ext(header.Filename)
+	
+	ts := time.Now().UTC().String()
+	ts = strings.ReplaceAll(ts, " ", "_")
+	ts = strings.ReplaceAll(ts, ":", "-")
+	filename := ts + ext
+	out, err := os.Create(filename)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	rawTime := time.Now().UTC().String()
-	rawTime = strings.ReplaceAll(rawTime, " ", "_")
-	rawTime = strings.ReplaceAll(rawTime, ":", "-")
-	filename := rawTime + ".txt"
-	outFile, err := os.Create(filename)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer outFile.Close()
-	outFile.WriteString(result)
+	defer out.Close()
+	_, _ = out.WriteString(result)
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(result))
 
