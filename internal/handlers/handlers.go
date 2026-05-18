@@ -13,21 +13,19 @@ import (
 
 func RootHandler(w http.ResponseWriter, r *http.Request) {
 
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-		return
-	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
 	http.ServeFile(w, r, "./index.html")
 
 }
+
 func UploadHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	file, header, err := r.FormFile("file")
+	file, header, err := r.FormFile("myFile")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

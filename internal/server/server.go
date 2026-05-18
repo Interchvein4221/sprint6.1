@@ -16,8 +16,8 @@ type Server struct {
 func NewServer(logger *log.Logger) *Server {
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", handlers.UploadHandler)
-	mux.HandleFunc("/upload", handlers.UploadHandler)
+	mux.HandleFunc("/", handlers.RootHandler)
+	mux.HandleFunc("/upload", handlers.RootHandler)
 	srv := &http.Server{
 		Addr:         ":8080",
 		Handler:      mux,
