@@ -4,7 +4,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -13,6 +12,7 @@ import (
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
 
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	http.ServeFile(w, r, "index.html")
 
 }
@@ -23,7 +23,12 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	file, header, err := r.FormFile("file")
+	err := r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	file, _, err := r.FormFile("file")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -39,22 +44,17 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	ext := filepath.Ext(header.Filename)
 	rawTime := time.Now().UTC().String()
 	rawTime = strings.ReplaceAll(rawTime, " ", "_")
 	rawTime = strings.ReplaceAll(rawTime, ":", "-")
-	filename := rawTime + ext
+	filename := rawTime + ".txt"
 	outFile, err := os.Create(filename)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer outFile.Close()
-	_, err = outFile.WriteString(result)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	outFile.WriteString(result)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(result))
 
