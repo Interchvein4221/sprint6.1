@@ -3,9 +3,14 @@ package handlers
 import (
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
+	"time"
+
 	"github.com/Yandex-Practicum/go1fl-sprint6-final/internal/service"
 )
+
 func RootHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.URL.Path != "/" {
@@ -20,32 +25,46 @@ func RootHandler(w http.ResponseWriter, r *http.Request) {
 func UploadHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodPost {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		http.Error(w, "method not allowed", http.StatusInternalServerError)
 		return
 	}
 	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	file, _, err := r.FormFile("myFile")
+	file, header, err := r.FormFile("file")
 	if err != nil {
-		http.Error(w, "no file", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer file.Close()
 	data, err := io.ReadAll(file)
 	if err != nil {
-		http.Error(w, "read error", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	input := strings.TrimSpace(string(data))
 	result, err := service.Convert(input)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	ext := filepath.Ext(header.Filename)
+	if ext == "" {
+		ext = ".txt"
+	}
+	filename := time.Now().UTC().Format("20060102150405") + ext
+	err = os.WriteFile(filename, []byte(result), 0644)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	_, _ = w.Write([]byte(result))
+	_, err = w.Write([]byte(result))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 }
