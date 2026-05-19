@@ -17,7 +17,7 @@ func NewServer(logger *log.Logger) *Server {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handlers.RootHandler)
-	mux.HandleFunc("/upload", handlers.RootHandler)
+	mux.HandleFunc("/upload", handlers.UploadHandler)
 	srv := &http.Server{
 		Addr:         ":8080",
 		Handler:      mux,
