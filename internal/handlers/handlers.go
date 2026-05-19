@@ -2,25 +2,18 @@ package handlers
 
 import (
 	"io"
-	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/Yandex-Practicum/go1fl-sprint6-final/internal/service"
 )
 
 func RootHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
-		return
-	}
-
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-	http.ServeFile(w, r, indexPath())
+	http.ServeFile(w, r, "index.html")
 }
 
 func UploadHandler(w http.ResponseWriter, r *http.Request) {
@@ -29,7 +22,14 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	file, header, err := formFile(r)
+
+	err := r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	file, header, err := r.FormFile("file")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -40,8 +40,8 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	input := strings.TrimSpace(string(data))
-	result, err := service.Convert(input)
+
+	result, err := service.Convert(string(data))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -55,23 +55,4 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Write([]byte(result))
 
-}
-
-func formFile(r *http.Request) (multipart.File, *multipart.FileHeader, error) {
-	for _, name := range []string{"file", "myFile", "upload", "data"} {
-		file, header, err := r.FormFile(name)
-		if err == nil {
-			return file, header, nil
-		}
-	}
-	return nil, nil, http.ErrMissingFile
-}
-
-func indexPath() string {
-	for _, path := range []string{"cmd/index.html", "index.html", "../cmd/index.html"} {
-		if _, err := os.Stat(path); err == nil {
-			return path
-		}
-	}
-	return "cmd/index.html"
 }

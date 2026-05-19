@@ -7,9 +7,9 @@ import (
 	"github.com/Yandex-Practicum/go1fl-sprint6-final/pkg/morse"
 )
 
-var ErrEmptyInput = errors.New("empty input")
-var ErrUnknownMorseCode = errors.New("unknown morse code")
-var ErrUnknownText = errors.New("unknown text symbol")
+var ErrEmptyInput = errors.New("Ошибка ввода")
+var ErrUnknownMorseCode = errors.New("Неизвестный код азбуки Морзе")
+var ErrUnknownText = errors.New("Неизвестный буква алфавита")
 
 func Convert(input string) (string, error) {
 	input = strings.TrimSpace(input)
@@ -17,7 +17,7 @@ func Convert(input string) (string, error) {
 		return "", ErrEmptyInput
 	}
 
-	if isMorse(input) {
+	if strings.Trim(input, ".- \n\r\t") == "" {
 		if err := validateMorse(input); err != nil {
 			return "", err
 		}
@@ -29,10 +29,6 @@ func Convert(input string) (string, error) {
 	}
 
 	return morse.ToMorse(input), nil
-}
-
-func isMorse(input string) bool {
-	return strings.Trim(input, ".- \n\r\t") == ""
 }
 
 func validateMorse(input string) error {
